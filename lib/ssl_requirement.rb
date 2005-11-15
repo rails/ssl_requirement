@@ -29,6 +29,10 @@ module SslRequirement
     def ssl_required(*actions)
       write_inheritable_array(:ssl_required_actions, actions)
     end
+
+    def ssl_allowed(*actions)
+      write_inheritable_array(:ssl_allowed_actions, actions)
+    end
   end
   
   protected
@@ -36,9 +40,15 @@ module SslRequirement
     def ssl_required?
       (self.class.read_inheritable_attribute(:ssl_required_actions) || []).include?(action_name.to_sym)
     end
+    
+    def ssl_allowed?
+      (self.class.read_inheritable_attribute(:ssl_allowed_actions) || []).include?(action_name.to_sym)
+    end
 
   private
     def ensure_proper_protocol
+      return true if ssl_allowed?
+
       if ssl_required? && !request.ssl?
         redirect_to "https://" + request.host + request.request_uri
         return false
